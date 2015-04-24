@@ -58,7 +58,7 @@
 					
 						<li><a href="/archives">归档</a></li>
 					
-						<li><a href="/about">关于</a></li>
+						<li><a href="/myphotos">照片墙</a></li>
 					
 					<li>
 					
@@ -90,7 +90,6 @@
     
   </p>
 </header>
-
 	<div class="article-content">
 		
 		
@@ -278,6 +277,19 @@ NSData *imageData = UIImagePNGRepresentation(img);
 </footer>   	       
 	</article>
 	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2015/03/18/testphoto/" title="testphoto">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  testphoto</span>
+</a>
+</div>
+
+
+</nav>
+
 	
 <section class="comment">
 	
@@ -338,9 +350,14 @@ NSData *imageData = UIImagePNGRepresentation(img);
   <p class="asidetitle">友情链接</p>
     <ul>
       <li><a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a></li>
+      <li><a href="http://gengbiao.me" target="_blank" title="coney">coney's Blog</a></li>
     </ul>
 </div>
 
+
+  <div class="rsspart">
+	<a href="atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
 
   
   <div class="tagcloudlist">
@@ -349,13 +366,6 @@ NSData *imageData = UIImagePNGRepresentation(img);
        <a href="/tags/ios/" style="font-size: NaNpx;">ios</a><a href="/tags/图片上传/" style="font-size: NaNpx;">图片上传</a>
     </div>
   </div>
-
-
-  <div class="rsspart">
-	<a href="atom.xml" target="_blank" title="rss">RSS 订阅</a>
-</div>
-
-  <iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=2&ptype=1&speed=0&skin=1&isTitle=1&noborder=1&isWeibo=1&isFans=0&uid=2161312630&verifier=5af53ea3&dpc=1"></iframe>
 
 
 </aside>
@@ -494,6 +504,27 @@ $(document).ready(function(){
 
 
 
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
 
 
 
