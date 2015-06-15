@@ -7,13 +7,14 @@
   <meta name="360-site-verification" content="67fbcc5a67f4c65c057315b28fa0b2c8" />
 <meta name="google-site-verification" content="2GzxQ0VtXwTSUdmGm6DzcmhTzM_I9QmzCb_pzpMzD88" />
   
-    <title>IOS实现上传图片到服务器 | Huj</title>
+    <title>UIImage镜像变换的一个小陷阱 | Huj</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
     
     <meta name="author" content="HU Jie">
     
-    <meta name="description" content="最近需要实现在ios端上传图片到服务器的功能，总结了一下网上的资源，基本实现了这个功能。ios端的程序封装成了一个类，可以比较方便的引入自己的工程，代码在这里。其中也附录了服务器端的代码，使用了python编写，使用flask构建小型服务器。这里主要总结一下在ios上实现http post请求。
-主">
+    <meta name="description" content="最近在开发IOS程序的时候，需要对一副图像进行镜像处理。本以为是一个很简单的任务，没想到中间遇到一点小插曲，耽误了不少时间，索性写篇博客记录一下。
+UIImage有个属性叫UIImageOrientation，表明图像的方向。它是一个枚举变量，在代码中能查到：
+12345678910typedef ">
     
     
     
@@ -78,15 +79,15 @@
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2015/03/17/IOS实现上传图片到服务器/" title="IOS实现上传图片到服务器" itemprop="url">IOS实现上传图片到服务器</a>
+      <a href="/2015/06/16/UIImage镜像变换的一个小陷阱/" title="UIImage镜像变换的一个小陷阱" itemprop="url">UIImage镜像变换的一个小陷阱</a>
   </h1>
   <p class="article-author">By
     
       <a href="http://hujhahaha.github.io" title="HU Jie">HU Jie</a>
     </p>
   <p class="article-time">
-    <time datetime="2015-03-17T03:54:18.000Z" itemprop="datePublished">3月 17 2015</time>
-    更新日期:<time datetime="2015-03-17T04:05:02.000Z" itemprop="dateModified">3月 17 2015</time>
+    <time datetime="2015-06-15T16:22:23.000Z" itemprop="datePublished">6月 16 2015</time>
+    更新日期:<time datetime="2015-06-15T16:23:22.000Z" itemprop="dateModified">6月 16 2015</time>
     
   </p>
 </header>
@@ -98,179 +99,52 @@
 		
 		</div>
 		
-		<p>最近需要实现在ios端上传图片到服务器的功能，总结了一下网上的资源，基本实现了这个功能。ios端的程序封装成了一个类，可以比较方便的引入自己的工程，代码在<a href="http://download.csdn.net/detail/yayagepeiya/8505153" target="_blank" rel="external">这里</a>。其中也附录了服务器端的代码，使用了python编写，使用flask构建小型服务器。这里主要总结一下在ios上实现http post请求。</p>
-<p>主要参考了<a href="http://www.cocoachina.com/bbs/read.php?tid=89985" target="_blank" rel="external">这篇文章</a>。</p>
-<p>标准的http post格式如下：<br><img src="http://img.blog.csdn.net/20150317110528118" alt="这里写图片描述"><br>这里很多东西都是默认的，ios在创建NSMutableURLRequest的时候会默认填上。 头部里面我们需要做的就是填上content-type,HTTPMethod和Content-length。</p>
-<p>所谓HTTPMethod，有GET，POST等，显然我们这里要向服务器传送数据，肯定要用POST方法。而content-Type是请求的基本格式，有两种，一种是application/x-www-form-urlencoded，用于基本格式，一般是用来发文字信息，不能用来文件上传。另一种是multipart/form-data;boundary=AaS8HJ，可以用来文件上传。boundary是分界符，用来区分不同的字段，可以随便设，我这里设的是AaS8HJ。我们既然要上传图片，那肯定是选择后者啦。至于Content-length，故名思议，就是内容的长度了。</p>
-<p>填好了header部分，就是要填body部分了。body部分的格式如下：</p>
-<pre><code>--boundary
-content-disposition: form-data; name=<span class="string">"field1"</span>
+		<p>最近在开发IOS程序的时候，需要对一副图像进行镜像处理。本以为是一个很简单的任务，没想到中间遇到一点小插曲，耽误了不少时间，索性写篇博客记录一下。</p>
+<p>UIImage有个属性叫UIImageOrientation，表明图像的方向。它是一个枚举变量，在代码中能查到：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> NS_ENUM(<span class="built_in">NSInteger</span>, UIImageOrientation) {</div><div class="line">    UIImageOrientationUp,            <span class="comment">// default orientation</span></div><div class="line">    UIImageOrientationDown,          <span class="comment">// 180 deg rotation</span></div><div class="line">    UIImageOrientationLeft,          <span class="comment">// 90 deg CCW</span></div><div class="line">    UIImageOrientationRight,         <span class="comment">// 90 deg CW</span></div><div class="line">    UIImageOrientationUpMirrored,    <span class="comment">// as above but image mirrored along other axis. horizontal flip</span></div><div class="line">    UIImageOrientationDownMirrored,  <span class="comment">// horizontal flip</span></div><div class="line">    UIImageOrientationLeftMirrored,  <span class="comment">// vertical flip</span></div><div class="line">    UIImageOrientationRightMirrored, <span class="comment">// vertical flip</span></div><div class="line">};</div></pre></td></tr></table></figure>
 
-Hello world!
---boundary
-content-disposition: form-data; name=<span class="string">"pic"</span>; filename=<span class="string">"boris.png"</span>
-Content-Type: image/png
+<p>于是能很容易地写出下面的代码：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">UIImage <span class="variable">*flip</span> = [UIImage imageWithCGImage:srcImage.CGImage</div><div class="line">                                        <span class="keyword">scale</span>:srcImage.<span class="keyword">scale</span></div><div class="line">            orientation:(srcImage.imageOrientation+<span class="number">4</span>)<span class="variable">%8</span>];</div></pre></td></tr></table></figure>
 
-<span class="keyword">...</span> contents of boris.png <span class="keyword">...</span>
---boundary
-</code></pre><p>首先是添加分界线，注意前面要加两个小横线，例如我们刚才设的分界符是AaS8HJ，那分界线就是—AaS8HJ</p>
-<pre><code><span class="attribute">content-disposition</span>: <span class="string">form-data; name="field1"</span>
+<p>试了一下没问题，图像成功镜像了。本以为这个问题就这么轻松的搞定了，但没想到后来事情的发展出乎我的意料。</p>
+<p>先介绍一下背景，我的app的功能是识别一张图像中的手势。目前已经实现对左手手势的识别。于是我想识别右手，只需要将图像做一个镜像变换，理论上就能用原来的算法识别了。但意外的是，我在用上面的方法镜像之后，并不能识别右手。更奇怪的时，左手手势经过上述变换之后依然能够识别！</p>
+<p>一开始以为是我的算法什么地方写错了，但反复检查发现代码并没有写错。这下我就晕菜了，加上最近恐怖电影看的比较多，差点以为出现灵异事件了。当然这是开玩笑，肯定还是某个地方存在一个隐蔽的错误。花了不少时间，终于找到原因了。其实是一个很简单的错误，但是如果当时脑袋一时转不过弯来，还真是蛮费解的。</p>
+<p>我们知道，图像是一个二维的矩阵，在内存里面其实就是一个一维的数组。在改变UIImage的orientation的时候，实际上程序并没有将数组中的元素进行重排，只是将orientation那个属性变了一下，换句话说只是改了一下标记。只是在你需要将图片显示出来的时候，它会根据orientation这个属性进行显示。我一开始测试的时候是将图片显示出来看它有没有做镜像，所以那时候是没问题的。</p>
+<p>而问题就在于，我的手势识别程序利用了opencv，首先将UIImage转化成opencv里面的IplImage。而在这一步，转换函数才不管你的orientation是什么，它只认内存中的那个一维数组。所以转换到IplImage之后，实际上图像并没有做镜像变换。</p>
+<p>找到原因之后，就明白应该怎么做了。最简单粗暴地方法，将那个一维数据遍历一边，人工将里面的元素重排。当然我这么懒的人还是不想写那一坨代码，百度一下还是找到了替代的方法。方法就是在Core Graphics(Quartz)层面上重绘图片。本来镜像变换是无法通过平移和旋转得到的，但是Quartz有一个很蛋疼的特性，正好帮了我大忙。</p>
+<p>应用别人博客里面的一段话，原文在<a href="http://www.bennychen.cn/tag/cgcontextdrawimage/" target="_blank" rel="external">这里</a>。</p>
+<blockquote>
+<p>在iOS的不同framework中使用着不同的坐标系：</p>
+<ul>
+<li>UIKit － y轴向下</li>
+<li>Core Graphics(Quartz) － y轴向上</li>
+<li>OpenGL ES － y轴向上</li>
+</ul>
+<p>UIKit是iPhone SDK的Cocoa Touch层的核心framework，是iPhone应用程序图形界面和事件驱动的基础，它和传统的windows桌面一样，坐标系是y轴向下的; Core Graphics(Quartz)一个基于2D的图形绘制引擎，它的坐标系则是y轴向上的；而OpenGL ES是iPhone SDK的2D和3D绘制引擎，它使用左手坐标系，它的坐标系也是y轴向上的，如果不考虑z轴，在二维下它的坐标系和Quartz是一样的。</p>
+</blockquote>
+<p>所以Quatz里面的图像和UIKit图像是上下颠倒的：</p>
+<p><img src="http://img.blog.csdn.net/20150616000047642" alt="这里写图片描述"></p>
+<p>这简直就为我做镜像变化帮了大忙。上下颠倒之后，我只需要绕原点旋转180度，再平移一下就好了。画个简单地示意图：</p>
+<p><img src="http://img.blog.csdn.net/20150615235906268" alt="这里写图片描述"></p>
+<p>哈哈，其实还蛮简单的，对应的代码就是这样啦：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">-(UIImage *) getMirroredImage:(UIImage *) src{</div><div class="line"></div><div class="line">    CGRect rect = CGRectMake(<span class="number">0</span>, <span class="number">0</span>, src.<span class="keyword">size</span>.width , src.<span class="keyword">size</span>.height);<span class="comment">//创建矩形框</span></div><div class="line">    UIGraphicsBeginImageContext(rect.<span class="keyword">size</span>);<span class="comment">//根据size大小创建一个基于位图的图形上下文</span></div><div class="line">    CGContextRef currentContext = UIGraphicsGetCurrentContext();<span class="comment">//获取当前quartz 2d绘图环境</span></div><div class="line">    CGContextClipToRect(currentContext, rect);<span class="comment">//设置当前绘图环境到矩形框</span></div><div class="line">    </div><div class="line">    CGContextRotateCTM(currentContext, M_PI); <span class="comment">//旋转180度</span></div><div class="line">    CGContextTranslateCTM(currentContext, -rect.<span class="keyword">size</span>.width, -rect.<span class="keyword">size</span>.height); <span class="comment">//平移， 这里是平移坐标系，跟平移图形是一个道理</span></div><div class="line">    </div><div class="line">    CGContextDrawImage(currentContext, rect, src.CGImage);<span class="comment">//绘图</span></div><div class="line">    </div><div class="line">    UIImage *flip = UIGraphicsGetImageFromCurrentImageContext();<span class="comment">//获得图片</span></div><div class="line">    </div><div class="line">    <span class="keyword">return</span> flip;</div><div class="line">    </div><div class="line">}</div></pre></td></tr></table></figure>
 
-<span class="nginx"><span class="title">Hello</span> world!</span>
-</code></pre><p>这里是添加一个字段，field1是你的字段的名称，hello world！是字段的值。当然你可以添加多个字段，把上面这段重复几次就行了。</p>
-<pre><code>--boundary
-content-disposition: form-data; name=<span class="string">"pic"</span>; filename=<span class="string">"boris.png"</span>
-Content-Type: image/png
-
-<span class="keyword">...</span> contents of boris.png <span class="keyword">...</span>
-</code></pre><p>这一段是添加要上传的文件了。filename指定文件的名字，content-type是文件的形式，图片的话就填image/png。… contents of boris.png …就是文件的二进制数据。</p>
-<p>最后还要加上—boundary—来表示post的结束，与前面的分界线不同，这里前后都要加上小横线。 另外上面的格式中注意每一个换行。</p>
-<p>下面就是ios中得实现了：</p>
-<p>头文件：</p>
-<pre><code><span class="comment">//</span>
-<span class="comment">//  LSNet.h</span>
-<span class="comment">//  test</span>
-<span class="comment">//</span>
-<span class="comment">//  Created by huj on 15-3-13.</span>
-<span class="comment">//  Copyright (c) 2015年 huj. All rights reserved.</span>
-<span class="comment">//</span>
-
-<span class="preprocessor">#import <span class="title">&lt;Foundation/Foundation.h&gt;</span></span>
-
-<span class="class"><span class="keyword">@interface</span> <span class="title">LSNet</span> : <span class="title">NSObject</span></span>{
-<span class="built_in">NSString</span> * URL;
-<span class="built_in">NSString</span> * Boundary;
-}
-
--(<span class="keyword">id</span>) initWithURL:(<span class="built_in">NSString</span> *)mURL;
--(<span class="built_in">BOOL</span>) Post:(<span class="built_in">NSDictionary</span> *)params withImage:(<span class="built_in">UIImage</span> *)img;
-<span class="keyword">@end</span>    
-</code></pre><p>.m文件</p>
-<pre><code><span class="comment">//  LSNet.m</span>
-<span class="comment">//  test</span>
-<span class="comment">//</span>
-<span class="comment">//  Created by huj on 15-3-13.</span>
-<span class="comment">//  Copyright (c) 2015年 huj. All rights reserved.</span>
-<span class="comment">//</span>
-    <span class="preprocessor">#import <span class="title">"LSNet.h"</span></span>
-
-<span class="class"><span class="keyword">@implementation</span> <span class="title">LSNet</span></span>
-
-
--(<span class="keyword">id</span>) initWithURL:(<span class="built_in">NSString</span> *)mURL {
-<span class="keyword">self</span> = [<span class="keyword">super</span> init];
-
-URL = mURL;   <span class="comment">//请求的URL</span>
-Boundary = <span class="string">@"AaS8HJ"</span>;  <span class="comment">//分界符</span>
-
-<span class="keyword">return</span> <span class="keyword">self</span>;
-}
-
--(<span class="built_in">BOOL</span>)Post:(<span class="built_in">NSDictionary</span> *)params withImage:(<span class="built_in">UIImage</span> *)img{
-
-
-<span class="comment">//创建URL</span>
-NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL: [<span class="built_in">NSURL</span> URLWithString:URL] ];
-
-<span class="comment">// 设置content-type</span>
-<span class="built_in">NSString</span> * contentType = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"multipart/form-data; boundary=%@"</span>,Boundary];
-
-<span class="comment">//添加普通字段</span>
-<span class="built_in">NSArray</span> * keys = [params allKeys];
-NSMutableData *body = [NSMutableData data];
-<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;[keys count];i++) {
-    <span class="built_in">NSString</span> * key = [keys objectAtIndex:i];
-    <span class="keyword">if</span> (![key isEqualToString:<span class="string">@"pic"</span>]) {
-
-        <span class="comment">//添加分界符：--AaS8HJ</span>
-        [body appendData:[[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"--%@\r\n"</span>, Boundary]
-                          dataUsingEncoding:NSUTF8StringEncoding]];
-
-        <span class="comment">//声明一个字段：  content-disposition: form-data; name="字段名"</span>
-        [body appendData:[[<span class="built_in">NSString</span> stringWithFormat:
-                           <span class="string">@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n"</span>, key]
-                          dataUsingEncoding:NSUTF8StringEncoding]];
-
-        <span class="comment">//字段的值</span>
-        [body appendData:[[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%@\r\n"</span>, [params objectForKey:key]] dataUsingEncoding:NSUTF8StringEncoding]];
-    }
-}
-
-
-<span class="comment">// 加入一个图片</span>
-NSData *imageData = UIImagePNGRepresentation(img);
-<span class="keyword">if</span> (imageData) {
-
-    <span class="comment">////添加分界符：--AaS8HJ</span>
-    [body appendData:[[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"--%@\r\n"</span>, Boundary]
-                      dataUsingEncoding:NSUTF8StringEncoding]];
-
-    <span class="comment">//声明一个字段</span>
-    <span class="comment">//content-disposition: form-data; name="pic"; filename="image.png"</span>
-    <span class="comment">//Content-Type: image/png</span>
-
-    [body appendData:[<span class="string">@"Content-Disposition: form-data; name=\"pic\"; filename=\"image.png\"\r\n"</span>
-                      dataUsingEncoding:NSUTF8StringEncoding]];
-    [body appendData:[<span class="string">@"Content-Type: image/png\r\n\r\n"</span>
-                      dataUsingEncoding:NSUTF8StringEncoding]];
-
-    <span class="comment">//添加图片的二进制内容</span>
-    [body appendData:imageData];
-    [body appendData:[[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"\r\n"</span>]
-                      dataUsingEncoding:NSUTF8StringEncoding]];
-}
-
-
-<span class="comment">// post请求结尾的分界线，注意，这里是--AaS8HJ--，前后都有小横线</span>
-[body appendData:[[<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"--%@--\r\n"</span>, Boundary]
-                  dataUsingEncoding:NSUTF8StringEncoding]];
-
-
-[request setHTTPMethod:<span class="string">@"POST"</span>];
-[request setHTTPBody:body];
-[request setValue:contentType forHTTPHeaderField:<span class="string">@"content-Type"</span>];
-
-<span class="built_in">NSString</span> *postLength = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"%lu"</span>, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)[body length]];
-[request setValue:postLength forHTTPHeaderField:<span class="string">@"Content-Length"</span>];
-
-<span class="comment">// request</span>
-[<span class="built_in">NSURLConnection</span> connectionWithRequest:request delegate:<span class="keyword">self</span>];
-
-<span class="keyword">return</span> <span class="literal">YES</span>;
-}
-
-
-<span class="preprocessor">#pragma mark - NSURLConnection delegate</span>
-    - (<span class="keyword">void</span>)connection:(<span class="built_in">NSURLConnection</span> *)connection didReceiveResponse:(NSURLResponse *)response{
-<span class="built_in">NSLog</span>(<span class="string">@"请求成功"</span>);
-}
-
-
-- (<span class="keyword">void</span>)connection:(<span class="built_in">NSURLConnection</span> *)connection didFailWithError:(<span class="built_in">NSError</span> *)error{
-<span class="built_in">NSLog</span>(<span class="string">@"请求失败"</span>);
-}
-<span class="keyword">@end</span>
-</code></pre><p>代码在<a href="http://download.csdn.net/detail/yayagepeiya/8505153" target="_blank" rel="external">这里</a>（含服务器代码）</p>
+<p>总结一下，如果只是开发普通的app，只涉及到图片的显示，那第一种方法完全能搞定，也很简单。如果涉及到图像的一些处理，就要注意一下这些小问题啦。虽然很简单，但是像我这种编程菜鸟，如果不搞清楚原理，搞不好就浪费好长时间还找不到原因。</p>
   
 	</div>
 		<footer class="article-footer clearfix">
 
   <div class="article-tags">
   
-  <span></span> <a href="/tags/ios/">ios</a><a href="/tags/图片上传/">图片上传</a>
+  <span></span> <a href="/tags/ios/">ios</a><a href="/tags/图片镜像/">图片镜像</a>
   </div>
 
-
-<div class="article-categories">
-  <span></span>
-  <a class="article-category-link" href="/categories/ios/">ios</a>
-</div>
 
 
 
 <div class="article-share" id="share">
 
-  <div data-url="http://hujhahaha.github.io/2015/03/17/IOS实现上传图片到服务器/" data-title="IOS实现上传图片到服务器 | Huj" data-tsina="null" class="share clearfix">
+  <div data-url="http://hujhahaha.github.io/2015/06/16/UIImage镜像变换的一个小陷阱/" data-title="UIImage镜像变换的一个小陷阱 | Huj" data-tsina="null" class="share clearfix">
   </div>
 
 </div>
@@ -279,21 +153,21 @@ NSData *imageData = UIImagePNGRepresentation(img);
 	
 <nav class="article-nav clearfix">
  
- <div class="prev" >
- <a href="/2015/06/16/UIImage镜像变换的一个小陷阱/" title="UIImage镜像变换的一个小陷阱">
-  <strong>PREVIOUS:</strong><br/>
-  <span>
-  UIImage镜像变换的一个小陷阱</span>
+
+<div class="next">
+<a href="/2015/03/17/IOS实现上传图片到服务器/"  title="IOS实现上传图片到服务器">
+ <strong>NEXT:</strong><br/> 
+ <span>IOS实现上传图片到服务器
+</span>
 </a>
 </div>
-
 
 </nav>
 
 	
 <section class="comment">
 	
-	<div class="ds-thread" data-title="IOS实现上传图片到服务器" data-thread-key="IOS实现上传图片到服务器" data-author-key="HU Jie" data-url="http://hujhahaha.github.io/post/IOS实现上传图片到服务器"></div>
+	<div class="ds-thread" data-title="UIImage镜像变换的一个小陷阱" data-thread-key="UIImage镜像变换的一个小陷阱" data-author-key="HU Jie" data-url="http://hujhahaha.github.io/post/UIImage镜像变换的一个小陷阱"></div>
 	
 </section>
 
